@@ -1,14 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { calcularTasa } from './bateria.js';
 
 const CLAVE = 'pileta.auditoriaBateria';
 const REFRESCO_MS = 10_000;
 
-// Se prende con ?bateria=1 y se apaga con ?bateria=0. Queda guardado, asi que
-// alcanza con abrir la URL con el parametro una vez en Chrome para que la
-// auditoria tambien aparezca en la PWA instalada, que es donde conviene medir.
+export const HAY_API_BATERIA =
+  typeof navigator !== 'undefined' && typeof navigator.getBattery === 'function';
+
+// Se puede prender desde la app o con ?bateria=1 en la URL. El parametro existe
+// para poder probar rapido desde la compu, pero no es el camino principal: a un
+// icono en la pantalla de inicio no se le pueden poner query params.
 function leerFlag() {
-  const param = new URLSearchParams(window.location.search).get('bateria');
+  let param = null;
+  try {
+    param = new URLSearchParams(window.location.search).get('bateria');
+  } catch {
+    param = null;
+  }
   try {
     if (param !== null) {
       const prendido = param !== '0';
@@ -21,19 +29,39 @@ function leerFlag() {
   }
 }
 
-export const AUDITORIA_PRENDIDA = typeof window !== 'undefined' && leerFlag();
+function guardarFlag(prendido) {
+  try {
+    window.localStorage.setItem(CLAVE, prendido ? '1' : '0');
+  } catch {
+    // Se pierde la preferencia para la proxima vez, nada mas.
+  }
+}
 
 /** Mide el consumo real de bateria mientras la app corre. La matematica del
  *  ritmo vive en bateria.js, que esta testeado aparte. */
 export function useBatteryAudit() {
+  const [prendida, setPrendida] = useState(leerFlag);
   const [estado, setEstado] = useState(null);
   const anclaRef = useRef(null);
   const caidasRef = useRef([]);
 
+  const alternar = useCallback(() => {
+    setPrendida((actual) => {
+      const siguiente = !actual;
+      guardarFlag(siguiente);
+      return siguiente;
+    });
+  }, []);
+
   useEffect(() => {
-    if (!AUDITORIA_PRENDIDA || typeof navigator.getBattery !== 'function') {
+    if (!prendida || !HAY_API_BATERIA) {
+      setEstado(null);
       return undefined;
     }
+
+    // Cada vez que se prende se mide de cero.
+    anclaRef.current = null;
+    caidasRef.current = [];
 
     let bateria = null;
     let cancelado = false;
@@ -95,7 +123,7 @@ export function useBatteryAudit() {
       bateria?.removeEventListener('levelchange', alCambiarNivel);
       bateria?.removeEventListener('chargingchange', recalcular);
     };
-  }, []);
+  }, [prendida]);
 
-  return estado;
+  return { estado, prendida, alternar };
 }

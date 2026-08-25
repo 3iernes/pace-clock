@@ -40,6 +40,8 @@ export default function SetupScreen({
   onIntervalChange,
   onPrepChange,
   onStart,
+  auditoria,
+  onAlternarAuditoria,
 }) {
   return (
     <main className="screen screen--setup">
@@ -65,6 +67,19 @@ export default function SetupScreen({
       <button type="button" className="btn btn--start" onClick={onStart}>
         START
       </button>
+
+      {/* Diagnostico, no parte del uso normal: chico y en una esquina para que
+          no compita con los controles que se tocan todos los dias. */}
+      {onAlternarAuditoria && (
+        <button
+          type="button"
+          className="setup__auditoria"
+          onClick={onAlternarAuditoria}
+          aria-pressed={auditoria}
+        >
+          bateria
+        </button>
+      )}
     </main>
   );
 }

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import BatteryAudit from './BatteryAudit.jsx';
 import ClockScreen from './ClockScreen.jsx';
 import SetupScreen from './SetupScreen.jsx';
-import { AUDITORIA_PRENDIDA, useBatteryAudit } from './useBatteryAudit.js';
+import { HAY_API_BATERIA, useBatteryAudit } from './useBatteryAudit.js';
 import { usePersistentNumber } from './usePersistentNumber.js';
 import { useIntervalTimer } from './useIntervalTimer.js';
 import { useWakeLock } from './useWakeLock.js';
@@ -27,7 +27,7 @@ export default function App() {
 
   const { tick, running, start, stop } = useIntervalTimer();
   const wakeLockStatus = useWakeLock(running);
-  const bateria = useBatteryAudit();
+  const { estado: bateria, prendida: auditoria, alternar: alternarAuditoria } = useBatteryAudit();
 
   const handleStart = useCallback(
     () => start(intervalSeconds, prepSeconds),
@@ -52,9 +52,11 @@ export default function App() {
           onIntervalChange={setIntervalSeconds}
           onPrepChange={setPrepSeconds}
           onStart={handleStart}
+          auditoria={auditoria}
+          onAlternarAuditoria={HAY_API_BATERIA ? alternarAuditoria : null}
         />
       )}
-      {AUDITORIA_PRENDIDA && <BatteryAudit estado={bateria} />}
+      {auditoria && <BatteryAudit estado={bateria} />}
     </>
   );
 }

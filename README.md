@@ -74,15 +74,13 @@ Si se cambia `public/logo.svg`, regenerar los íconos con
 ## Auditoría de batería
 
 La app puede medir su propio consumo, para saber si el teléfono aguanta un
-entrenamiento entero. Se activa agregando `?bateria=1` a la URL:
+entrenamiento entero. Se prende con el botón **BATERÍA**, abajo a la derecha de la
+pantalla de configuración, y queda guardado entre sesiones.
 
-```
-https://3iernes.github.io/pace-clock/?bateria=1
-```
-
-El flag queda guardado, así que alcanza con abrirlo una vez en Chrome para que la
-lectura también aparezca en la PWA instalada, que es donde conviene medir. Se
-apaga con `?bateria=0`.
+También se puede prender con `?bateria=1` en la URL y apagar con `?bateria=0`, que
+es más cómodo para probar desde la computadora. Pero a un ícono de la pantalla de
+inicio no se le pueden poner query params, así que el botón es el camino principal.
+El botón sólo aparece si el navegador expone la API de batería.
 
 Aparece una franja arriba con el nivel inicial, el actual, los minutos
 transcurridos y el ritmo de consumo en puntos porcentuales por hora.

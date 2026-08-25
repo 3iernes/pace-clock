@@ -97,6 +97,7 @@ button:disabled {
 /* ---------- Pantalla de configuracion ---------- */
 
 .screen--setup {
+  position: relative;
   justify-content: center;
   align-items: center;
   gap: clamp(1rem, 6vh, 2.5rem);
@@ -245,4 +246,26 @@ button:disabled {
 .audit__dato--crudo {
   color: #7c8a99;
   font-weight: 500;
+}
+
+.setup__auditoria {
+  position: absolute;
+  right: clamp(0.75rem, 3vw, 2rem);
+  bottom: clamp(0.5rem, 3vh, 1.25rem);
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: clamp(0.6rem, 2.5vh, 0.8rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup__auditoria[aria-pressed='true'] {
+  border-color: var(--warn);
+  color: var(--warn);
 }
