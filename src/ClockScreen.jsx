@@ -10,7 +10,12 @@ export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onS
   return (
     <main className={`screen screen--clock cue-${tick.cue}`}>
       <header className="clock__top">
-        <span className="clock__rep">{preparing ? 'PREPARATE' : `REP ${tick.rep}`}</span>
+        <div className="clock__sesion">
+          <span className="clock__rep">{preparing ? 'PREPARATE' : `REP ${tick.rep}`}</span>
+          {!preparing && (
+            <span className="clock__transcurrido">{formatClock(tick.elapsedSeconds)}</span>
+          )}
+        </div>
         <span className="clock__interval">cada {formatClock(intervalSeconds)}</span>
       </header>
 

@@ -269,3 +269,19 @@ button:disabled {
   border-color: var(--warn);
   color: var(--warn);
 }
+
+/* El numero de repeticion y el tiempo total de la sesion, apilados arriba a la
+   izquierda. El transcurrido va mas apagado: es informacion de contexto, no algo
+   que haya que leer desde el agua. */
+.clock__sesion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2em;
+}
+
+.clock__transcurrido {
+  font-weight: 600;
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+}

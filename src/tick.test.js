@@ -91,3 +91,40 @@ test('volver despues de un hueco recalcula en vez de arrastrar el error', () => 
   assert.equal(gap.rep, Math.floor((12 * 60_000) / INTERVAL_MS) + 1);
   assert.equal(gap.rep, 7);
 });
+
+test('el tiempo transcurrido cuenta desde la repeticion 1, no desde el START', () => {
+  // Durante la preparacion la sesion todavia no arranco.
+  assert.equal(computeTick(T0, SCHEDULE).elapsedSeconds, 0);
+  assert.equal(computeTick(T0 + 4_999, SCHEDULE).elapsedSeconds, 0);
+
+  // El instante en que arranca la repeticion 1 es el cero de la sesion.
+  assert.equal(at(0).elapsedSeconds, 0);
+  assert.equal(at(999).elapsedSeconds, 0);
+  assert.equal(at(1_000).elapsedSeconds, 1);
+  assert.equal(at(45 * 60_000).elapsedSeconds, 2700);
+});
+
+test('el transcurrido y la cuenta regresiva cambian en el mismo instante', () => {
+  // Importante para el render: si cambiaran en momentos distintos, la pantalla
+  // se redibujaria dos veces por segundo en vez de una.
+  let cambiosDesincronizados = 0;
+  let previo = at(0);
+  for (let ms = 1; ms <= 5 * 60_000; ms += 1) {
+    const actual = at(ms);
+    const cambioCuenta = actual.secondsLeft !== previo.secondsLeft;
+    const cambioTranscurrido = actual.elapsedSeconds !== previo.elapsedSeconds;
+    if (cambioCuenta !== cambioTranscurrido) cambiosDesincronizados += 1;
+    previo = actual;
+  }
+  assert.equal(cambiosDesincronizados, 0);
+});
+
+test('el transcurrido nunca retrocede', () => {
+  let previo = -1;
+  for (let ms = 0; ms <= 90 * 60_000; ms += 250) {
+    const { elapsedSeconds } = at(ms);
+    assert.ok(elapsedSeconds >= previo, `retrocedio de ${previo} a ${elapsedSeconds} en ${ms}ms`);
+    previo = elapsedSeconds;
+  }
+  assert.equal(previo, 90 * 60);
+});

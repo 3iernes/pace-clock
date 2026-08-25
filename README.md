@@ -26,6 +26,8 @@ sólo eso.
 
 - Cuenta regresiva desde el intervalo configurado hasta cero, y se reinicia sola.
 - Lleva el número de repetición, así no hay que contar mentalmente mientras se nada.
+- Debajo, el tiempo total de la sesión, que empieza a correr con la repetición 1
+  (la cuenta de preparación no suma).
 - Corre indefinidamente hasta que se la para. No hace falta configurar cuántas
   repeticiones: se para cuando terminás la serie.
 - Funciona **sin conexión**, una vez instalada.

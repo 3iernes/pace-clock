@@ -9,7 +9,7 @@ export const IDLE = 'idle';
 export const PREP = 'prep';
 export const RUNNING = 'running';
 
-export const IDLE_TICK = { phase: IDLE, rep: 0, secondsLeft: 0, cue: 'normal' };
+export const IDLE_TICK = { phase: IDLE, rep: 0, secondsLeft: 0, elapsedSeconds: 0, cue: 'normal' };
 
 /**
  * Todo se deriva de `prepEndsAt`, que es el timestamp absoluto en el que arranca
@@ -26,6 +26,9 @@ export function computeTick(now, { intervalMs, prepEndsAt }) {
       phase: PREP,
       rep: 0,
       secondsLeft: Math.ceil(remaining / 1000),
+      // La sesion todavia no arranco: el tiempo transcurrido se cuenta desde
+      // la repeticion 1, no desde que se apreto START.
+      elapsedSeconds: 0,
       cue: remaining <= WARN_MS ? 'warn' : 'normal',
     };
   }
@@ -44,6 +47,7 @@ export function computeTick(now, { intervalMs, prepEndsAt }) {
     // Con ceil la cuenta va 1:50 ... 0:01 y en el rollover pega el flash verde.
     // El flash es el cero, asi que nunca hace falta mostrar 0:00.
     secondsLeft: Math.ceil(remaining / 1000),
+    elapsedSeconds: Math.floor(elapsed / 1000),
     cue,
   };
 }
@@ -53,6 +57,7 @@ export function sameTick(a, b) {
     a.phase === b.phase &&
     a.rep === b.rep &&
     a.secondsLeft === b.secondsLeft &&
+    a.elapsedSeconds === b.elapsedSeconds &&
     a.cue === b.cue
   );
 }
