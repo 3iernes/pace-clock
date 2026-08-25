@@ -31,9 +31,11 @@ export default defineConfig(({ command }) => ({
         scope: './',
         display: 'fullscreen',
         display_override: ['fullscreen', 'standalone'],
-        // Al instalarla queda bloqueada en horizontal, sin depender de la
-        // rotacion automatica del telefono.
-        orientation: 'landscape',
+        // 'any' y no 'landscape': con el bloqueo puesto la version vertical
+        // no se veria nunca en la PWA instalada. El costo es que ahora la app
+        // sigue la rotacion automatica de Android en vez de garantizar
+        // horizontal por su cuenta.
+        orientation: 'any',
         background_color: '#0B0F14',
         theme_color: '#0B0F14',
       },

@@ -99,6 +99,26 @@ cuando el valor verdadero era 6%/h.
 
 La medición sólo corre con el teléfono desenchufado. Si se enchufa, se reinicia.
 
+## Las dos orientaciones
+
+La pantalla del cronómetro no es un layout que se reacomoda: son **dos grillas
+distintas sobre la misma marca**, elegidas con `@media (orientation: portrait)`.
+El motivo es que cambia cuál es la restricción.
+
+| | Horizontal (720×360) | Vertical (360×720) |
+| --- | --- | --- |
+| Escasea | el alto | el ancho |
+| La cuenta se dimensiona por | alto (48vh) | ancho (36vw) |
+| REP | 14px, en una esquina | 41px, arriba de la cuenta |
+| STOP | pastilla chica, abajo a la derecha | ancho y alto, en la zona del pulgar |
+
+Por eso los hijos de `ClockScreen` van sueltos y cada uno se coloca por
+`grid-area`: agrupados no se podría, por ejemplo, poner el transcurrido debajo
+del REP en horizontal y debajo de la cuenta en vertical.
+
+El tamaño de la cuenta en vertical sale de que `10:00` —el intervalo más largo
+configurable— entre en 360px de ancho.
+
 ## Estructura
 
 | Archivo | Qué hace |

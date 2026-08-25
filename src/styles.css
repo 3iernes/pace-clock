@@ -86,6 +86,8 @@ button:disabled {
 }
 
 .btn--stop {
+  grid-area: stop;
+  justify-self: end;
   /* 48px es el minimo comodo para un dedo mojado a traves de la bolsa. */
   min-height: 3rem;
   border: 2px solid currentColor;
@@ -158,7 +160,19 @@ button:disabled {
 .screen--clock {
   background: var(--bg);
   color: var(--fg);
-  justify-content: space-between;
+  /* Grilla en vez de flex: es lo que permite que la version vertical sea un
+     layout propio y no el horizontal reordenado. Las areas se redefinen enteras
+     mas abajo para orientacion vertical. */
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "rep      .      pace"
+    "elapsed  .      ."
+    "count    count  count"
+    "warn     warn   stop";
+  align-items: center;
+  column-gap: 1rem;
   /* Corto, pero no instantaneo: se lee como un cambio de estado, no como un
      parpadeo. El color ocupa la pantalla entera porque con antiparras mojadas
      se ve un bloque de color de reojo, no un numero chico. */
@@ -177,24 +191,36 @@ button:disabled {
   color: #fff;
 }
 
-.clock__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
+.clock__rep {
+  grid-area: rep;
+  justify-self: start;
   font-size: clamp(0.75rem, 4vh, 1.5rem);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
 
+/* Mas apagado que el REP: es informacion de contexto, no algo que haya que leer
+   desde el agua. */
+.clock__transcurrido {
+  grid-area: elapsed;
+  justify-self: start;
+  font-size: clamp(0.75rem, 4vh, 1.5rem);
+  font-weight: 600;
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+}
+
 .clock__interval {
+  grid-area: pace;
+  justify-self: end;
+  font-size: clamp(0.75rem, 4vh, 1.5rem);
   font-weight: 600;
   opacity: 0.6;
   letter-spacing: 0.04em;
 }
 
 .clock__count {
-  flex: 1;
+  grid-area: count;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,17 +231,81 @@ button:disabled {
   letter-spacing: -0.03em;
 }
 
-.clock__bottom {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: clamp(0.75rem, 3vw, 1.5rem);
-}
-
 .clock__warning {
+  grid-area: warn;
+  justify-self: end;
   font-size: clamp(0.65rem, 2.5vh, 0.85rem);
   font-weight: 600;
   opacity: 0.7;
+}
+
+/* ---------- Colocacion vertical ----------
+
+   No es el layout horizontal reordenado: cambia cual es la restriccion. En
+   horizontal sobra ancho y falta alto, asi que la cuenta se dimensiona por alto
+   y todo lo demas se comprime en los bordes. En vertical es al reves: 360px de
+   ancho mandan sobre la tipografia, y sobran ~500px de alto que se reparten
+   entre un REP mucho mas grande y un STOP comodo abajo. */
+
+@media (orientation: portrait) {
+  .screen--clock {
+    grid-template-columns: 1fr;
+    /* Las dos filas 1fr centran el grupo REP/cuenta/transcurrido como bloque,
+       con el pace clavado arriba y el STOP abajo. Sin ellas la cuenta flota
+       sola en el medio y queda desprendida del REP. */
+    grid-template-rows: auto 1fr auto auto auto auto 1fr auto;
+    grid-template-areas:
+      "pace"
+      "."
+      "rep"
+      "count"
+      "elapsed"
+      "warn"
+      "."
+      "stop";
+    justify-items: center;
+    row-gap: clamp(0.25rem, 1.5vh, 0.9rem);
+    /* La pila del reloj y el medidor flota centrada arriba. En horizontal cae
+       en el hueco entre el REP y el pace, pero en vertical caeria justo encima
+       del pace: hay que dejarle el lugar. */
+    padding-top: clamp(3.5rem, 9vh, 5.5rem);
+  }
+
+  .clock__rep,
+  .clock__transcurrido,
+  .clock__interval,
+  .clock__warning,
+  .btn--stop {
+    justify-self: center;
+  }
+
+  /* En horizontal el REP vive apretado en una esquina a 14px. Aca hay alto de
+     sobra, asi que se lo trata como lo que es: el segundo dato en importancia
+     despues de la cuenta. */
+  .clock__rep {
+    font-size: clamp(1.75rem, 11vw, 3.5rem);
+  }
+
+  .clock__transcurrido {
+    font-size: clamp(1rem, 5.5vw, 2rem);
+  }
+
+  .clock__interval {
+    font-size: clamp(0.85rem, 4.5vw, 1.5rem);
+  }
+
+  /* Dimensionada por ancho, no por alto. El limite sale de que "10:00" (el
+     intervalo mas largo configurable) entre en 360px sin desbordar. */
+  .clock__count {
+    font-size: clamp(3rem, 36vw, 12rem);
+  }
+
+  /* Grande y abajo, en la zona del pulgar, aprovechando el alto que sobra. */
+  .btn--stop {
+    width: min(80vw, 20rem);
+    min-height: clamp(3.5rem, 11vh, 6rem);
+    text-align: center;
+  }
 }
 
 /* ---------- Auditoria de bateria (opt-in con ?bateria=1) ---------- */
@@ -264,22 +354,6 @@ button:disabled {
 .setup__auditoria[aria-pressed='true'] {
   border-color: var(--warn);
   color: var(--warn);
-}
-
-/* El numero de repeticion y el tiempo total de la sesion, apilados arriba a la
-   izquierda. El transcurrido va mas apagado: es informacion de contexto, no algo
-   que haya que leer desde el agua. */
-.clock__sesion {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2em;
-}
-
-.clock__transcurrido {
-  font-weight: 600;
-  opacity: 0.55;
-  letter-spacing: 0.04em;
 }
 
 
