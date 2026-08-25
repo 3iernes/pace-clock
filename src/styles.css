@@ -187,18 +187,10 @@ button:disabled {
   letter-spacing: 0.1em;
 }
 
-/* Hora y pace: informacion de contexto, apagada respecto del REP. */
-.clock__interval,
-.clock__hora {
+.clock__interval {
   font-weight: 600;
   opacity: 0.6;
   letter-spacing: 0.04em;
-}
-
-.clock__meta {
-  display: flex;
-  align-items: baseline;
-  gap: clamp(0.5rem, 2vw, 1.1rem);
 }
 
 .clock__count {
@@ -229,10 +221,6 @@ button:disabled {
 /* ---------- Auditoria de bateria (opt-in con ?bateria=1) ---------- */
 
 .audit {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   gap: 0.75em;
   align-items: center;
@@ -292,4 +280,48 @@ button:disabled {
   font-weight: 600;
   opacity: 0.55;
   letter-spacing: 0.04em;
+}
+
+
+/* ---------- Pila centrada arriba: medidor de bateria y reloj ---------- */
+
+.cima {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  z-index: 2;
+  /* Flota sobre la pantalla del cronometro: no puede robarle toques al STOP
+     ni a nada que quede debajo. */
+  pointer-events: none;
+}
+
+/* Fondo propio en vez de heredar el color de la pantalla: cuando el cronometro
+   se pone ambar o verde, el reloj sigue siendo legible sin tener que cambiar de
+   color. Sobre el fondo oscuro normal la pastilla casi no se nota. */
+.reloj {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: 0.2em 0.7em;
+  border-radius: 0 0 0.5em 0.5em;
+  background: rgba(0, 0, 0, 0.35);
+  color: #f2f5f7;
+  font-size: clamp(0.8rem, 4.5vh, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+/* El sufijo la vuelve inconfundible: sin el, "16:30" se lee igual que una
+   duracion, que era justo el problema. */
+.reloj__hs {
+  font-size: 0.6em;
+  font-weight: 600;
+  opacity: 0.7;
+  letter-spacing: 0.08em;
 }

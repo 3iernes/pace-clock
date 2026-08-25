@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { formatTimeOfDay } from './format.js';
 import BatteryAudit from './BatteryAudit.jsx';
 import ClockScreen from './ClockScreen.jsx';
 import SetupScreen from './SetupScreen.jsx';
@@ -56,7 +57,21 @@ export default function App() {
           onAlternarAuditoria={HAY_API_BATERIA ? alternarAuditoria : null}
         />
       )}
-      {auditoria && <BatteryAudit estado={bateria} />}
+      {/* Pila centrada arriba. El reloj va debajo del medidor cuando esta
+          prendido, y ocupa su lugar cuando no. Aislado al centro no compite con
+          el pace ni con el transcurrido, que es lo que lo hacia ilegible.
+
+          No necesita temporizador propio: App se redibuja cada vez que cambia
+          el tick, o sea una vez por segundo. */}
+      <div className="cima">
+        {auditoria && <BatteryAudit estado={bateria} />}
+        {running && (
+          <span className="reloj">
+            {formatTimeOfDay(new Date())}
+            <small className="reloj__hs">hs</small>
+          </span>
+        )}
+      </div>
     </>
   );
 }
