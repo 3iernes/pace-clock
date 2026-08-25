@@ -7,15 +7,13 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node --test src/*.test.js",
-    "generate-pwa-assets": "pwa-assets-generator"
+    "test": "node --test src/*.test.js"
   },
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-react": "^6.1.0",
     "vite": "^8.2.2",
     "vite-plugin-pwa": "^1.3.0"

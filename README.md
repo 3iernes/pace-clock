@@ -72,8 +72,15 @@ en cuenta que sobre `http://` **no funcionan ni el Wake Lock ni el modo offline*
 ambos exigen contexto seguro (HTTPS o localhost). Para probar eso hace falta la
 app publicada.
 
-Si se cambia `public/logo.svg`, regenerar los íconos con
-`npm run generate-pwa-assets`.
+Los íconos PNG están versionados en `public/` y listados a mano en el manifest
+(`vite.config.js`). Se generaron una vez con `@vite-pwa/assets-generator`, que
+**ya no es dependencia del proyecto**: arrastraba `sharp` y con él tres avisos de
+seguridad de severidad alta, para una tarea que se corre casi nunca. Si algún día
+cambia `public/logo.svg`, regenerarlos con:
+
+```bash
+npx @vite-pwa/assets-generator --preset minimal-2023 public/logo.svg
+```
 
 ## Auditoría de batería
 

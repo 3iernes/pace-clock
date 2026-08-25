@@ -19,7 +19,12 @@ export default defineConfig(({ command }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      pwaAssets: { config: true },
+      // Los iconos ya entran al precache por globPatterns, que barre todo dist.
+      // Sin esto el plugin los agrega ademas por su cuenta y quedan duplicados:
+      // hoy con la misma revision, asi que Workbox los deduplica en silencio,
+      // pero si alguna vez difirieran abortaria la instalacion entera y la app
+      // dejaria de funcionar offline.
+      includeManifestIcons: false,
       manifest: {
         name: 'Pileta - Cronometro de intervalos',
         short_name: 'Pileta',
@@ -38,6 +43,21 @@ export default defineConfig(({ command }) => ({
         orientation: 'any',
         background_color: '#0B0F14',
         theme_color: '#0B0F14',
+        // Listados a mano en vez de generados. Los PNG viven en public/ y solo
+        // cambian si cambia public/logo.svg, que pasa casi nunca; a cambio se
+        // evita arrastrar sharp como dependencia de desarrollo. Para
+        // regenerarlos, ver el README.
+        icons: [
+          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
       },
       workbox: {
         // Sin "webmanifest": vite-plugin-pwa ya agrega el manifest al precache por
