@@ -71,6 +71,33 @@ app publicada.
 Si se cambia `public/logo.svg`, regenerar los íconos con
 `npm run generate-pwa-assets`.
 
+## Auditoría de batería
+
+La app puede medir su propio consumo, para saber si el teléfono aguanta un
+entrenamiento entero. Se activa agregando `?bateria=1` a la URL:
+
+```
+https://3iernes.github.io/pace-clock/?bateria=1
+```
+
+El flag queda guardado, así que alcanza con abrirlo una vez en Chrome para que la
+lectura también aparezca en la PWA instalada, que es donde conviene medir. Se
+apaga con `?bateria=0`.
+
+Aparece una franja arriba con el nivel inicial, el actual, los minutos
+transcurridos y el ritmo de consumo en puntos porcentuales por hora.
+
+**Por qué el número tarda en volverse confiable.** El nivel de batería se reporta
+de a 1%, así que restar "nivel inicial menos nivel actual" arrastra hasta un punto
+entero de error: al arrancar podés estar recién pasado un escalón o a punto de
+cruzar el siguiente. Por eso el ritmo se calcula **entre caídas de nivel**, donde
+hay una cantidad exacta de puntos en un intervalo exacto. Hasta que haya dos
+caídas registradas el número se muestra en gris y con "(estimando…)", porque es la
+cuenta cruda. En un caso real medido en los tests, la cuenta cruda daba 9,2%/h
+cuando el valor verdadero era 6%/h.
+
+La medición sólo corre con el teléfono desenchufado. Si se enchufa, se reinicia.
+
 ## Estructura
 
 | Archivo | Qué hace |
@@ -84,7 +111,10 @@ Si se cambia `public/logo.svg`, regenerar los íconos con
 | `src/styles.css` | Todo el diseño, incluidos los tres estados de color. |
 | `src/format.js` | Segundos a `M:SS`. |
 | `src/usePersistentNumber.js` | Recuerda la configuración entre sesiones. |
-| `src/tick.test.js` | Tests, con el runner nativo de Node (sin dependencias). |
+| `src/bateria.js` | El cálculo del ritmo de consumo de batería, sin React. |
+| `src/useBatteryAudit.js` | Lee la API de batería y acumula las caídas de nivel. |
+| `src/BatteryAudit.jsx` | La franja de lectura, sólo visible con `?bateria=1`. |
+| `src/*.test.js` | Tests, con el runner nativo de Node (sin dependencias). |
 
 ## Decisiones técnicas
 

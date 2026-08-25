@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
+import BatteryAudit from './BatteryAudit.jsx';
 import ClockScreen from './ClockScreen.jsx';
 import SetupScreen from './SetupScreen.jsx';
+import { AUDITORIA_PRENDIDA, useBatteryAudit } from './useBatteryAudit.js';
 import { usePersistentNumber } from './usePersistentNumber.js';
 import { useIntervalTimer } from './useIntervalTimer.js';
 import { useWakeLock } from './useWakeLock.js';
@@ -25,32 +27,34 @@ export default function App() {
 
   const { tick, running, start, stop } = useIntervalTimer();
   const wakeLockStatus = useWakeLock(running);
+  const bateria = useBatteryAudit();
 
   const handleStart = useCallback(
     () => start(intervalSeconds, prepSeconds),
     [start, intervalSeconds, prepSeconds],
   );
 
-  if (!running) {
-    return (
-      <SetupScreen
-        intervalSeconds={intervalSeconds}
-        prepSeconds={prepSeconds}
-        intervalRange={INTERVAL_RANGE}
-        prepRange={PREP_RANGE}
-        onIntervalChange={setIntervalSeconds}
-        onPrepChange={setPrepSeconds}
-        onStart={handleStart}
-      />
-    );
-  }
-
   return (
-    <ClockScreen
-      tick={tick}
-      intervalSeconds={intervalSeconds}
-      wakeLockStatus={wakeLockStatus}
-      onStop={stop}
-    />
+    <>
+      {running ? (
+        <ClockScreen
+          tick={tick}
+          intervalSeconds={intervalSeconds}
+          wakeLockStatus={wakeLockStatus}
+          onStop={stop}
+        />
+      ) : (
+        <SetupScreen
+          intervalSeconds={intervalSeconds}
+          prepSeconds={prepSeconds}
+          intervalRange={INTERVAL_RANGE}
+          prepRange={PREP_RANGE}
+          onIntervalChange={setIntervalSeconds}
+          onPrepChange={setPrepSeconds}
+          onStart={handleStart}
+        />
+      )}
+      {AUDITORIA_PRENDIDA && <BatteryAudit estado={bateria} />}
+    </>
   );
 }
