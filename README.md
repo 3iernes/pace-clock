@@ -127,6 +127,24 @@ del REP en horizontal y debajo de la cuenta en vertical.
 El tamaño de la cuenta en vertical sale de que `10:00` —el intervalo más largo
 configurable— entre en 360px de ancho.
 
+## Si la app instalada falla
+
+En el Moto E5 Plus (Android 8) la PWA instalada crashea al abrirla con
+"Pileta keeps stopping". Es un crash del proceso de Android, no de la app: el
+mismo código anda perfecto abriendo la URL en Chrome en ese mismo teléfono, y la
+app instalada anda bien en un Galaxy S22. El problema está en el WebAPK que
+Android genera al instalar, no en el código.
+
+Por eso al arrancar el cronómetro la app **pide pantalla completa y fija la
+orientación** por API (`src/pantallaCompleta.js`). Eso devuelve, desde el
+navegador, las dos únicas cosas que daba la app instalada, y hace que el
+empaquetado roto deje de importar. Las dos llamadas degradan sin romper: si el
+navegador las rechaza, sólo queda la barra de URL a la vista.
+
+La orientación se fija **a la que tenga el teléfono en ese momento**, no a una
+fija, para no romper la versión vertical. Sirve además porque apoyado en el borde
+de la pileta el acelerómetro lo puede hacer rotar solo a mitad de una serie.
+
 ## Estructura
 
 | Archivo | Qué hace |
@@ -138,6 +156,7 @@ configurable— entre en 360px de ancho.
 | `src/SetupScreen.jsx` | Los steppers y el START. |
 | `src/ClockScreen.jsx` | La cuenta gigante, el contador y el STOP. |
 | `src/styles.css` | Todo el diseño, incluidos los tres estados de color. |
+| `src/pantallaCompleta.js` | Pide pantalla completa y fija la orientación al arrancar. |
 | `src/format.js` | Segundos a `M:SS`. |
 | `src/usePersistentNumber.js` | Recuerda la configuración entre sesiones. |
 | `src/bateria.js` | El cálculo del ritmo de consumo de batería, sin React. |
