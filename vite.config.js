@@ -34,8 +34,16 @@ export default defineConfig(({ command }) => ({
         // el nombre del repo en cada lugar.
         start_url: './',
         scope: './',
-        display: 'fullscreen',
-        display_override: ['fullscreen', 'standalone'],
+        // 'standalone' y sin display_override, que es el camino mas transitado
+        // y mas viejo de los WebAPK. La app instalada crashea en el Moto E5 Plus
+        // (Android 8) con "Pileta keeps stopping", y estos dos valores son los
+        // candidatos mas probables a romper una cascara vieja: fullscreen es un
+        // modo poco usado y display_override es una funcion de manifest bastante
+        // posterior a ese Android.
+        //
+        // No se pierde nada: la app pide pantalla completa por API al arrancar
+        // (ver pantallaCompleta.js), asi que termina igual a pantalla completa.
+        display: 'standalone',
         // 'any' y no 'landscape': con el bloqueo puesto la version vertical
         // no se veria nunca en la PWA instalada. La orientacion se fija al
         // arrancar el cronometro (ver pantallaCompleta.js), que ademas funciona
