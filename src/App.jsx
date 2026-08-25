@@ -3,6 +3,7 @@ import BatteryAudit from './BatteryAudit.jsx';
 import ClockScreen from './ClockScreen.jsx';
 import SetupScreen from './SetupScreen.jsx';
 import { HAY_API_BATERIA, useBatteryAudit } from './useBatteryAudit.js';
+import { entrarPantallaCompleta, salirPantallaCompleta } from './pantallaCompleta.js';
 import { usePersistentNumber } from './usePersistentNumber.js';
 import { useIntervalTimer } from './useIntervalTimer.js';
 import { useWakeLock } from './useWakeLock.js';
@@ -29,10 +30,17 @@ export default function App() {
   const wakeLockStatus = useWakeLock(running);
   const { estado: bateria, prendida: auditoria, alternar: alternarAuditoria } = useBatteryAudit();
 
-  const handleStart = useCallback(
-    () => start(intervalSeconds, prepSeconds),
-    [start, intervalSeconds, prepSeconds],
-  );
+  const handleStart = useCallback(() => {
+    // Se llama aca y no desde un efecto porque requestFullscreen exige un gesto
+    // del usuario, y este es el click.
+    entrarPantallaCompleta();
+    start(intervalSeconds, prepSeconds);
+  }, [start, intervalSeconds, prepSeconds]);
+
+  const handleStop = useCallback(() => {
+    salirPantallaCompleta();
+    stop();
+  }, [stop]);
 
   const medidor = auditoria ? <BatteryAudit estado={bateria} /> : null;
 
@@ -43,7 +51,7 @@ export default function App() {
           tick={tick}
           intervalSeconds={intervalSeconds}
           wakeLockStatus={wakeLockStatus}
-          onStop={stop}
+          onStop={handleStop}
           medidor={medidor}
         />
       ) : (

@@ -37,9 +37,9 @@ export default defineConfig(({ command }) => ({
         display: 'fullscreen',
         display_override: ['fullscreen', 'standalone'],
         // 'any' y no 'landscape': con el bloqueo puesto la version vertical
-        // no se veria nunca en la PWA instalada. El costo es que ahora la app
-        // sigue la rotacion automatica de Android en vez de garantizar
-        // horizontal por su cuenta.
+        // no se veria nunca en la PWA instalada. La orientacion se fija al
+        // arrancar el cronometro (ver pantallaCompleta.js), que ademas funciona
+        // abriendo la app desde el navegador.
         orientation: 'any',
         background_color: '#0B0F14',
         theme_color: '#0B0F14',
