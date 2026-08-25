@@ -130,10 +130,18 @@ configurable— entre en 360px de ancho.
 ## Si la app instalada falla
 
 En el Moto E5 Plus (Android 8) la PWA instalada crashea al abrirla con
-"Pileta keeps stopping". Es un crash del proceso de Android, no de la app: el
-mismo código anda perfecto abriendo la URL en Chrome en ese mismo teléfono, y la
-app instalada anda bien en un Galaxy S22. El problema está en el WebAPK que
-Android genera al instalar, no en el código.
+"Pileta keeps stopping". **No es un problema de esta app.**
+
+La evidencia: el mismo código anda perfecto abriendo la URL en Chrome en ese
+mismo teléfono; anda instalada en un Galaxy S22; `chrome://webapks` aparece vacío,
+o sea que Chrome ni siquiera registra el paquete; y —lo definitivo— **instalar
+cualquier otra PWA en ese teléfono crashea igual**, incluida una de Google como
+Squoosh.
+
+O sea que el soporte de WebAPK está roto a nivel sistema en ese Android, que ya
+no recibe actualizaciones de Chrome. No hay combinación de valores del manifest
+que lo arregle: se probó pasar a `display: standalone` y sacar `display_override`
+sin ningún efecto, y se revirtió.
 
 Por eso al arrancar el cronómetro la app **pide pantalla completa y fija la
 orientación** por API (`src/pantallaCompleta.js`). Eso devuelve, desde el
