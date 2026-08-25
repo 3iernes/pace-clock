@@ -85,15 +85,61 @@ button:disabled {
   padding: clamp(0.6rem, 3vh, 1.1rem) clamp(3.5rem, 16vw, 7rem);
 }
 
-.btn--stop {
+.stop {
   grid-area: stop;
   justify-self: end;
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn--stop {
+  position: relative;
+  overflow: hidden;
   /* 48px es el minimo comodo para un dedo mojado a traves de la bolsa. */
   min-height: 3rem;
   border: 2px solid currentColor;
   background: rgba(255, 255, 255, 0.08);
   font-size: clamp(0.8rem, 3.5vh, 1.2rem);
   padding: clamp(0.45rem, 2vh, 0.8rem) clamp(1.5rem, 6vw, 2.75rem);
+  /* Sin esto Chrome puede leer el contacto sostenido como el arranque de un
+     scroll y cancelar el puntero a mitad del gesto. */
+  touch-action: none;
+}
+
+/* El llenado va por transicion de CSS y el disparo por setTimeout: cero trabajo
+   de JavaScript por frame, que es lo que corresponde en un Snapdragon 425.
+   scaleX en vez de width porque no dispara relayout. */
+.btn__relleno {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  opacity: 0.3;
+  /* Vuelta rapida al cancelar; el llenado largo se define al mantener. */
+  transition: transform 120ms linear;
+}
+
+.btn--stop-activo .btn__relleno {
+  transform: scaleX(1);
+  transition-duration: 2000ms;
+}
+
+.btn__texto {
+  position: relative;
+}
+
+.stop__pista {
+  position: absolute;
+  bottom: calc(100% + 0.4em);
+  right: 0;
+  white-space: nowrap;
+  font-size: clamp(0.6rem, 2.5vh, 0.85rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  pointer-events: none;
 }
 
 /* ---------- Pantalla de configuracion ---------- */
@@ -272,7 +318,7 @@ button:disabled {
   .clock__transcurrido,
   .clock__interval,
   .clock__warning,
-  .btn--stop {
+  .stop {
     justify-self: center;
   }
 
@@ -298,10 +344,21 @@ button:disabled {
   }
 
   /* Grande y abajo, en la zona del pulgar, aprovechando el alto que sobra. */
-  .btn--stop {
+  .stop {
+    justify-self: center;
     width: min(80vw, 20rem);
+  }
+
+  .btn--stop {
+    width: 100%;
     min-height: clamp(3.5rem, 11vh, 6rem);
     text-align: center;
+  }
+
+  .stop__pista {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 

@@ -53,7 +53,8 @@ color de reojo, un número chico no.
    preparación.
 2. **START**. Corre la cuenta de preparación para acomodarse en la pared.
 3. Al llegar a cero empieza la repetición 1 y el ciclo del intervalo.
-4. **STOP** cuando termina la serie.
+4. **STOP**: hay que mantenerlo apretado dos segundos. El botón se va llenando
+   mientras tanto y si se suelta antes, no pasa nada.
 
 El último intervalo usado queda guardado para la próxima vez.
 

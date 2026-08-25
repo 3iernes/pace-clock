@@ -1,3 +1,4 @@
+import StopButton from './StopButton.jsx';
 import { formatClock, formatTimeOfDay } from './format.js';
 import { PREP } from './useIntervalTimer.js';
 
@@ -44,9 +45,7 @@ export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onS
 
       {avisarPantalla && <span className="clock__warning">La pantalla se puede apagar sola</span>}
 
-      <button type="button" className="btn btn--stop" onClick={onStop}>
-        STOP
-      </button>
+      <StopButton onStop={onStop} />
     </main>
   );
 }
