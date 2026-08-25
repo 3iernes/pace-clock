@@ -187,10 +187,18 @@ button:disabled {
   letter-spacing: 0.1em;
 }
 
-.clock__interval {
+/* Hora y pace: informacion de contexto, apagada respecto del REP. */
+.clock__interval,
+.clock__hora {
   font-weight: 600;
   opacity: 0.6;
   letter-spacing: 0.04em;
+}
+
+.clock__meta {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(0.5rem, 2vw, 1.1rem);
 }
 
 .clock__count {

@@ -1,4 +1,4 @@
-import { formatClock } from './format.js';
+import { formatClock, formatTimeOfDay } from './format.js';
 import { PREP } from './useIntervalTimer.js';
 
 export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onStop }) {
@@ -16,7 +16,13 @@ export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onS
             <span className="clock__transcurrido">{formatClock(tick.elapsedSeconds)}</span>
           )}
         </div>
-        <span className="clock__interval">cada {formatClock(intervalSeconds)}</span>
+        <div className="clock__meta">
+          {/* Sin hook ni intervalo propio: esta pantalla ya se redibuja una vez
+              por segundo porque cambia la cuenta regresiva, asi que la hora se
+              refresca sola. */}
+          <span className="clock__hora">{formatTimeOfDay(new Date())}</span>
+          <span className="clock__interval">cada {formatClock(intervalSeconds)}</span>
+        </div>
       </header>
 
       <div className="clock__count" aria-hidden="true">

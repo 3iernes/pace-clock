@@ -30,6 +30,7 @@ sólo eso.
   (la cuenta de preparación no suma).
 - Corre indefinidamente hasta que se la para. No hace falta configurar cuántas
   repeticiones: se para cuando terminás la serie.
+- Muestra la hora, porque en pantalla completa la PWA tapa el reloj del sistema.
 - Funciona **sin conexión**, una vez instalada.
 
 ### Aviso visual, no sonoro
