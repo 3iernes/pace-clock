@@ -1,4 +1,4 @@
-import { formatClock } from './format.js';
+import { formatClock, formatTimeOfDay } from './format.js';
 import { PREP } from './useIntervalTimer.js';
 
 /**
@@ -7,7 +7,7 @@ import { PREP } from './useIntervalTimer.js';
  * quede debajo del REP en horizontal pero debajo de la cuenta en vertical. Una
  * sola marca, dos grillas distintas en styles.css.
  */
-export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onStop }) {
+export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onStop, medidor }) {
   const preparing = tick.phase === PREP;
   const screenReaderLabel = preparing
     ? `Preparacion, ${tick.secondsLeft} segundos`
@@ -16,6 +16,17 @@ export default function ClockScreen({ tick, intervalSeconds, wakeLockStatus, onS
 
   return (
     <main className={`screen screen--clock cue-${tick.cue}`}>
+      {/* Dentro de la grilla y no flotando: como item ocupa su propia columna,
+          asi que no puede superponerse con el REP ni con el pace por mas que
+          cambien los tamanos de texto del sistema. Flotando si podia. */}
+      <div className="clock__cima">
+        {medidor}
+        <span className="reloj">
+          {formatTimeOfDay(new Date())}
+          <small className="reloj__hs">hs</small>
+        </span>
+      </div>
+
       <span className="clock__rep">{preparing ? 'PREPARATE' : `REP ${tick.rep}`}</span>
 
       {!preparing && (

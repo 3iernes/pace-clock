@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { formatTimeOfDay } from './format.js';
 import BatteryAudit from './BatteryAudit.jsx';
 import ClockScreen from './ClockScreen.jsx';
 import SetupScreen from './SetupScreen.jsx';
@@ -35,6 +34,8 @@ export default function App() {
     [start, intervalSeconds, prepSeconds],
   );
 
+  const medidor = auditoria ? <BatteryAudit estado={bateria} /> : null;
+
   return (
     <>
       {running ? (
@@ -43,6 +44,7 @@ export default function App() {
           intervalSeconds={intervalSeconds}
           wakeLockStatus={wakeLockStatus}
           onStop={stop}
+          medidor={medidor}
         />
       ) : (
         <SetupScreen
@@ -57,21 +59,9 @@ export default function App() {
           onAlternarAuditoria={HAY_API_BATERIA ? alternarAuditoria : null}
         />
       )}
-      {/* Pila centrada arriba. El reloj va debajo del medidor cuando esta
-          prendido, y ocupa su lugar cuando no. Aislado al centro no compite con
-          el pace ni con el transcurrido, que es lo que lo hacia ilegible.
-
-          No necesita temporizador propio: App se redibuja cada vez que cambia
-          el tick, o sea una vez por segundo. */}
-      <div className="cima">
-        {auditoria && <BatteryAudit estado={bateria} />}
-        {running && (
-          <span className="reloj">
-            {formatTimeOfDay(new Date())}
-            <small className="reloj__hs">hs</small>
-          </span>
-        )}
-      </div>
+      {/* En el cronometro la pila va dentro de la grilla (ver ClockScreen).
+          En configuracion no hay grilla que la contenga, asi que flota. */}
+      {!running && medidor && <div className="cima">{medidor}</div>}
     </>
   );
 }

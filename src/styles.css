@@ -167,8 +167,8 @@ button:disabled {
   grid-template-columns: auto 1fr auto;
   grid-template-rows: auto auto 1fr auto;
   grid-template-areas:
-    "rep      .      pace"
-    "elapsed  .      ."
+    "rep      cima   pace"
+    "elapsed  cima   ."
     "count    count  count"
     "warn     warn   stop";
   align-items: center;
@@ -253,8 +253,9 @@ button:disabled {
     /* Las dos filas 1fr centran el grupo REP/cuenta/transcurrido como bloque,
        con el pace clavado arriba y el STOP abajo. Sin ellas la cuenta flota
        sola en el medio y queda desprendida del REP. */
-    grid-template-rows: auto 1fr auto auto auto auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto auto auto auto 1fr auto;
     grid-template-areas:
+      "cima"
       "pace"
       "."
       "rep"
@@ -265,10 +266,6 @@ button:disabled {
       "stop";
     justify-items: center;
     row-gap: clamp(0.25rem, 1.5vh, 0.9rem);
-    /* La pila del reloj y el medidor flota centrada arriba. En horizontal cae
-       en el hueco entre el REP y el pace, pero en vertical caeria justo encima
-       del pace: hay que dejarle el lugar. */
-    padding-top: clamp(3.5rem, 9vh, 5.5rem);
   }
 
   .clock__rep,
@@ -312,7 +309,9 @@ button:disabled {
 
 .audit {
   display: flex;
-  gap: 0.75em;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2em 0.75em;
   align-items: center;
   padding: 0.25em 0.75em;
   border-radius: 0 0 0.5em 0.5em;
@@ -320,7 +319,6 @@ button:disabled {
   color: #f2f5f7;
   font-size: clamp(0.6rem, 2.5vh, 0.8rem);
   font-weight: 600;
-  white-space: nowrap;
   pointer-events: none;
 }
 
@@ -357,8 +355,27 @@ button:disabled {
 }
 
 
-/* ---------- Pila centrada arriba: medidor de bateria y reloj ---------- */
+/* ---------- Pila de medidor de bateria y reloj ---------- */
 
+/* En el cronometro va como item de la grilla: al ocupar su propia columna no
+   puede superponerse con el REP ni con el pace, pase lo que pase con la escala
+   de texto del sistema. Antes flotaba y si podia. */
+.clock__cima {
+  grid-area: cima;
+  align-self: start;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  /* Sin `min-width: 0` a proposito: ese es justamente el minimo automatico que
+     hace que la columna nunca sea mas angosta que su contenido, y por lo tanto
+     que empuje al REP y al pace en vez de pisarlos. Ponerlo lo anula. */
+  pointer-events: none;
+}
+
+/* En configuracion no hay grilla que la contenga, asi que flota. */
 .cima {
   position: fixed;
   top: 0;
@@ -369,8 +386,6 @@ button:disabled {
   align-items: center;
   gap: 0.3rem;
   z-index: 2;
-  /* Flota sobre la pantalla del cronometro: no puede robarle toques al STOP
-     ni a nada que quede debajo. */
   pointer-events: none;
 }
 
@@ -380,6 +395,7 @@ button:disabled {
 .reloj {
   display: flex;
   align-items: baseline;
+  white-space: nowrap;
   gap: 0.3em;
   padding: 0.2em 0.7em;
   border-radius: 0 0 0.5em 0.5em;
