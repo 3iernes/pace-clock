@@ -169,11 +169,17 @@ teléfono lo ejecuta.
 la misma URL. En ese teléfono el proveedor de WebView es Chrome 138 —el mismo
 motor que el navegador— así que renderiza idéntico.
 
-Se compila sin Gradle, sólo con las herramientas del SDK:
+Se compila con un solo comando, sin Gradle ni dependencias — sólo las
+herramientas del SDK de Android que ya están instaladas:
 
 ```bash
-cd android && ./build.sh
+npm run apk
 ```
+
+Deja el resultado en `public/pileta.apk`, listo para commitear y deployar. El
+script encuentra el SDK solo (o se le indica con `ANDROID_HOME`) y **falla si el
+DEX sale en una versión que el teléfono no pueda leer**, para que nunca se
+publique un APK que no arranca.
 
 Ventajas sobre el WebAPK, más allá de que este arranca:
 
