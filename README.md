@@ -138,10 +138,55 @@ o sea que Chrome ni siquiera registra el paquete; y —lo definitivo— **instal
 cualquier otra PWA en ese teléfono crashea igual**, incluida una de Google como
 Squoosh.
 
-O sea que el soporte de WebAPK está roto a nivel sistema en ese Android, que ya
-no recibe actualizaciones de Chrome. No hay combinación de valores del manifest
-que lo arregle: se probó pasar a `display: standalone` y sacar `display_override`
-sin ningún efecto, y se revirtió.
+### La causa exacta
+
+El informe de errores de Android lo dejó por escrito:
+
+```
+Process: org.chromium.webapk.a35bd75b37133fd76_v2
+java.lang.ClassNotFoundException: Didn't find class
+  "org.chromium.webapk.shell_apk.h2o.SplashContentProvider"
+Suppressed: java.io.IOException: Failed to open dex files from base.apk
+  because: Unrecognized version number in base.apk: 0 3 9
+```
+
+`0 3 9` es la versión del formato DEX, el bytecode compilado. Android 8.0 lee
+hasta **038**; el paquete que genera Google viene en **039**, que requiere
+Android 9. El runtime no puede interpretarlo, no encuentra ninguna clase, y el
+proceso se cae antes de cargar nada.
+
+En el mismo informe hay **diez** paquetes WebAPK distintos fallando igual, todos
+con DEX 039. No es esta app: es toda PWA instalada en ese teléfono. Y no es falta
+de espacio (había 6,1 GB libres).
+
+### La solución: `android/`
+
+Como la versión de DEX la define el `minSdkVersion` con el que se compila,
+**compilando el paquete nosotros con `--min-api 26` sale en DEX 038** y el
+teléfono lo ejecuta.
+
+`android/` es una envoltura nativa mínima: una Activity con un WebView que carga
+la misma URL. En ese teléfono el proveedor de WebView es Chrome 138 —el mismo
+motor que el navegador— así que renderiza idéntico.
+
+Se compila sin Gradle, sólo con las herramientas del SDK:
+
+```bash
+cd android && ./build.sh
+```
+
+Ventajas sobre el WebAPK, más allá de que este arranca:
+
+- **La pantalla se mantiene prendida con `FLAG_KEEP_SCREEN_ON`**, una bandera
+  nativa que sostiene el sistema mientras la ventana esté arriba. Es más
+  confiable que la Wake Lock API, que se libera sola al ocultarse la app. La web
+  lo detecta por el sufijo `PiletaApp` en el user agent y no muestra el aviso.
+- Pantalla completa e inmersiva por configuración de la Activity.
+- El botón atrás manda la app al fondo en vez de cerrarla en medio de una serie.
+
+El APK queda publicado en `public/pileta.apk`, así que se descarga desde el mismo
+sitio. La llave de firma (`android/llave.jks`) **no** se versiona: si se pierde,
+hay que desinstalar antes de reinstalar, porque la firma no va a coincidir.
 
 Por eso al arrancar el cronómetro la app **pide pantalla completa y fija la
 orientación** por API (`src/pantallaCompleta.js`). Eso devuelve, desde el

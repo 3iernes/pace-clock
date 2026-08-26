@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Envoltura nativa minima para el Moto E5 Plus.
+
+  El WebAPK que genera Google viene compilado en DEX 039 y Android 8.0 lee hasta
+  038, asi que crashea al arrancar sin llegar a cargar nada. Compilando nosotros
+  con min-api 26 el DEX sale en 038 y el telefono lo ejecuta.
+
+  Solo carga la misma URL en un WebView. En ese telefono el proveedor de WebView
+  es Chrome 138, o sea exactamente el mismo motor que el navegador.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ar.pileta"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28" />
+
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+  <application
+      android:label="@string/app_name"
+      android:icon="@mipmap/ic_launcher"
+      android:hardwareAccelerated="true"
+      android:allowBackup="false">
+
+    <activity
+        android:name="ar.pileta.MainActivity"
+        android:exported="true"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+        android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

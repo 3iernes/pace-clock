@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 
 const SUPPORTED = typeof navigator !== 'undefined' && 'wakeLock' in navigator;
 
+// La envoltura nativa de Android (ver android/) mantiene la pantalla prendida
+// con FLAG_KEEP_SCREEN_ON, que la sostiene el sistema mientras la ventana este
+// arriba: mas confiable que esta API, que se libera sola al ocultarse la app.
+// Corriendo ahi adentro no hay nada que pedir ni de que avisar.
+const EN_ENVOLTURA =
+  typeof navigator !== 'undefined' && navigator.userAgent.includes('PiletaApp');
+
 /**
  * Mantiene la pantalla prendida mientras corre el cronometro.
  *
@@ -13,10 +20,13 @@ const SUPPORTED = typeof navigator !== 'undefined' && 'wakeLock' in navigator;
  * Devuelve el estado para poder avisar en pantalla si no se pudo conseguir.
  */
 export function useWakeLock(active) {
-  const [status, setStatus] = useState(SUPPORTED ? 'idle' : 'unsupported');
+  const [status, setStatus] = useState(() => {
+    if (EN_ENVOLTURA) return 'nativo';
+    return SUPPORTED ? 'idle' : 'unsupported';
+  });
 
   useEffect(() => {
-    if (!SUPPORTED) return undefined;
+    if (EN_ENVOLTURA || !SUPPORTED) return undefined;
     if (!active) {
       setStatus('idle');
       return undefined;
