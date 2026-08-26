@@ -65,6 +65,11 @@ export default defineConfig(({ command }) => ({
         // (add-to-cache-list-conflicting-entries) y no se cachee absolutamente
         // nada, o sea que la app deja de funcionar offline.
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Workbox sirve index.html para cualquier navegacion dentro del sitio,
+        // que es el fallback normal de una SPA. Pero bajar el APK tambien es una
+        // navegacion, asi que sin esta excepcion el service worker devuelve la
+        // app en vez del archivo y la descarga nunca ocurre.
+        navigateFallbackDenylist: [/\.apk$/],
       },
     }),
   ],
