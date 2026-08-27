@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  App nativa para Wear OS (Galaxy Watch4).
+
+  A diferencia de la del telefono, esta no tiene WebView adentro: ese reloj no
+  declara la feature android.software.webview, asi que instanciar un WebView
+  tira UnsupportedOperationException y la app se cierra antes de dibujar nada.
+  Todo esta hecho con Canvas.
+
+  Por eso tampoco pide permiso de INTERNET: no hay nada que bajar. La app es
+  todo el paquete, sin service worker que cebar antes de ir a la pileta.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ar.pileta.reloj"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28" />
+
+  <!-- Sin esto el launcher de Wear OS no la lista como app del reloj. -->
+  <uses-feature android:name="android.hardware.type.watch" android:required="true" />
+
+  <!--
+    El unico permiso que pide. Es de los normales: se concede al instalar, sin
+    preguntarle nada al usuario.
+  -->
+  <uses-permission android:name="android.permission.VIBRATE" />
+
+  <application
+      android:label="@string/app_name"
+      android:icon="@mipmap/ic_launcher"
+      android:hardwareAccelerated="true"
+      android:allowBackup="false">
+
+    <!-- No necesita un telefono al lado para funcionar. -->
+    <meta-data android:name="com.google.android.wearable.standalone" android:value="true" />
+
+    <activity
+        android:name="ar.pileta.reloj.MainActivity"
+        android:exported="true"
+        android:theme="@style/PiletaReloj"
+        android:configChanges="keyboardHidden|screenSize|smallestScreenSize|screenLayout">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

@@ -7,8 +7,10 @@
     "dev": "vite --host",
     "build": "vite build",
     "apk": "node android/build.mjs",
+    "apk:reloj": "node android/build.mjs reloj",
     "preview": "vite preview --host",
-    "test": "node --test src/*.test.js"
+    "test": "node --test src/*.test.js",
+    "test:reloj": "node android/prueba-tick.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

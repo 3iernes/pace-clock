@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Compila el APK de la envoltura y lo deja listo para publicar.
+ * Compila un APK y lo deja listo para publicar.
  *
- *     npm run apk
+ *     npm run apk         # envoltura WebView para el Moto E5 Plus
+ *     npm run apk:reloj   # app nativa para el Galaxy Watch4
  *
  * Sin Gradle: aapt2 para los recursos, javac para el codigo, d8 para el dex y
  * apksigner para la firma. Todo sale del SDK de Android que ya esta instalado.
@@ -13,17 +14,47 @@
  * arrancar la app: es exactamente lo que le pasa al paquete que genera Google.
  */
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(AQUI, '..');
-const SALIDA = join(AQUI, 'build');
 
 const MIN_API = 26;
 const TARGET_API = 28;
 const CLAVE = 'pileta';
+
+/**
+ * Las dos variantes comparten el pipeline y los iconos, y no comparten nada mas:
+ * son dos aplicaciones distintas para dos dispositivos distintos.
+ */
+const VARIANTES = {
+  telefono: {
+    descripcion: 'envoltura WebView (Moto E5 Plus, Android 8)',
+    manifest: join(AQUI, 'AndroidManifest.xml'),
+    java: join(AQUI, 'java'),
+    paquete: 'ar.pileta',
+    res: [join(AQUI, 'res')],
+    salida: 'pileta.apk',
+  },
+  reloj: {
+    descripcion: 'app nativa Wear OS (Galaxy Watch4)',
+    manifest: join(AQUI, 'wear', 'AndroidManifest.xml'),
+    java: join(AQUI, 'wear', 'java'),
+    paquete: 'ar.pileta.reloj',
+    // Los iconos salen de la variante del telefono; el tema es propio.
+    res: [join(AQUI, 'res'), join(AQUI, 'wear', 'res')],
+    salida: 'pileta-reloj.apk',
+  },
+};
+
+const nombre = process.argv[2] ?? 'telefono';
+const variante = VARIANTES[nombre];
+if (!variante) {
+  throw new Error(`Variante desconocida: ${nombre}. Hay ${Object.keys(VARIANTES).join(' y ')}.`);
+}
+const SALIDA = join(AQUI, 'build', nombre);
 
 function ubicarSdk() {
   const candidatos = [
@@ -53,8 +84,22 @@ function elegirVersiones(sdk) {
   return { bt, plataforma };
 }
 
+/** Todos los archivos con esa extension abajo de `raiz`, recursivo. */
+function buscar(raiz, extension) {
+  const encontrados = [];
+  const recorrer = (dir) => {
+    for (const entrada of readdirSync(dir)) {
+      const camino = join(dir, entrada);
+      if (statSync(camino).isDirectory()) recorrer(camino);
+      else if (entrada.endsWith(extension)) encontrados.push(camino);
+    }
+  };
+  recorrer(raiz);
+  return encontrados;
+}
+
 function correr(paso, cmd, args) {
-  process.stdout.write(`${paso}\n`);
+  if (paso) process.stdout.write(`${paso}\n`);
   const r = spawnSync(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
   if (r.error) throw r.error;
   if (r.status !== 0) {
@@ -70,6 +115,7 @@ const BT = join(sdk, 'build-tools', bt);
 const ANDROID_JAR = join(sdk, 'platforms', plataforma, 'android.jar');
 const exe = (n) => join(BT, process.platform === 'win32' ? `${n}.exe` : n);
 
+console.log(`variante   ${nombre}   ${variante.descripcion}`);
 console.log(`SDK        ${sdk}`);
 console.log(`build-tools ${bt}   plataforma ${plataforma}   min-api ${MIN_API}\n`);
 
@@ -77,32 +123,41 @@ rmSync(SALIDA, { recursive: true, force: true });
 mkdirSync(join(SALIDA, 'clases'), { recursive: true });
 mkdirSync(join(SALIDA, 'dex'), { recursive: true });
 
-correr('1/6  recursos', exe('aapt2'), [
-  'compile', '--dir', join(AQUI, 'res'), '-o', join(SALIDA, 'res.zip'),
-]);
+// Un zip por directorio de recursos. El orden importa: los ultimos pisan a los
+// primeros, asi que lo propio de la variante va al final.
+const zipsRes = variante.res.map((dir, i) => {
+  const zip = join(SALIDA, `res${i}.zip`);
+  correr(`1/6  recursos (${dir.slice(AQUI.length + 1) || 'res'})`, exe('aapt2'), [
+    'compile', '--dir', dir, '-o', zip,
+  ]);
+  return zip;
+});
 
 correr('2/6  enlazado', exe('aapt2'), [
   'link',
   '-o', join(SALIDA, 'base.apk'),
   '-I', ANDROID_JAR,
-  '--manifest', join(AQUI, 'AndroidManifest.xml'),
-  '-R', join(SALIDA, 'res.zip'),
+  '--manifest', variante.manifest,
+  ...zipsRes.flatMap((zip) => ['-R', zip]),
   '--java', join(SALIDA, 'gen'),
   '--auto-add-overlay',
   '--min-sdk-version', String(MIN_API),
   '--target-sdk-version', String(TARGET_API),
 ]);
 
-correr('3/6  javac', 'javac', [
-  '-nowarn', '-source', '8', '-target', '8', '-bootclasspath', ANDROID_JAR,
+const fuentes = [
+  ...buscar(variante.java, '.java'),
+  join(SALIDA, 'gen', ...variante.paquete.split('.'), 'R.java'),
+];
+
+correr(`3/6  javac (${fuentes.length} archivos)`, 'javac', [
+  '-nowarn', '-source', '8', '-target', '8', '-encoding', 'UTF-8',
+  '-bootclasspath', ANDROID_JAR,
   '-d', join(SALIDA, 'clases'),
-  join(AQUI, 'java', 'ar', 'pileta', 'MainActivity.java'),
-  join(SALIDA, 'gen', 'ar', 'pileta', 'R.java'),
+  ...fuentes,
 ]);
 
-const clases = readdirSync(join(SALIDA, 'clases', 'ar', 'pileta'))
-  .filter((f) => f.endsWith('.class'))
-  .map((f) => join(SALIDA, 'clases', 'ar', 'pileta', f));
+const clases = buscar(join(SALIDA, 'clases'), '.class');
 
 correr(`4/6  dex (min-api ${MIN_API})`, 'java', [
   '-cp', join(BT, 'lib', 'd8.jar'), 'com.android.tools.r8.D8',
@@ -110,9 +165,7 @@ correr(`4/6  dex (min-api ${MIN_API})`, 'java', [
   '--output', join(SALIDA, 'dex'), ...clases,
 ]);
 
-process.stdout.write('5/6  empaquetado\n');
-const { default: AdmZipNo } = { default: null }; // sin dependencias: se usa jar del JDK
-correr('', 'jar', [
+correr('5/6  empaquetado', 'jar', [
   'uf', join(SALIDA, 'base.apk'), '-C', join(SALIDA, 'dex'), 'classes.dex',
 ]);
 copyFileSync(join(SALIDA, 'base.apk'), join(SALIDA, 'sin-firmar.apk'));
@@ -133,7 +186,7 @@ correr('', 'java', [
   '-jar', join(BT, 'lib', 'apksigner.jar'), 'sign',
   '--ks', llave, '--ks-pass', `pass:${CLAVE}`, '--key-pass', `pass:${CLAVE}`,
   '--min-sdk-version', String(MIN_API),
-  '--out', join(SALIDA, 'pileta.apk'), join(SALIDA, 'alineado.apk'),
+  '--out', join(SALIDA, variante.salida), join(SALIDA, 'alineado.apk'),
 ]);
 
 // Verificar que el DEX haya salido en una version que el telefono pueda leer.
@@ -144,9 +197,9 @@ if (dex > '038') {
   );
 }
 
-const destino = join(RAIZ, 'public', 'pileta.apk');
-copyFileSync(join(SALIDA, 'pileta.apk'), destino);
+const destino = join(RAIZ, 'public', variante.salida);
+copyFileSync(join(SALIDA, variante.salida), destino);
 
 console.log(`\nDEX ${dex}  (Android 8.0 lee hasta 038)`);
-console.log('APK -> public/pileta.apk');
-console.log('Deployalo con: git add public/pileta.apk && git commit && git push');
+console.log(`APK -> public/${variante.salida}`);
+console.log('Deployalo con: git add public && git commit && git push');

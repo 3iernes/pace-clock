@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import BatteryAudit from './BatteryAudit.jsx';
+import { aplicarActualizacion, vigilarActualizacion } from './actualizacion.js';
 import ClockScreen from './ClockScreen.jsx';
 import SetupScreen from './SetupScreen.jsx';
 import { HAY_API_BATERIA, useBatteryAudit } from './useBatteryAudit.js';
@@ -41,6 +42,14 @@ export default function App() {
     salirPantallaCompleta();
     stop();
   }, [stop]);
+
+  // Una version nueva se aplica sola, pero nunca en medio de una serie: si el
+  // cronometro esta corriendo, la recarga espera al STOP.
+  const [hayActualizacion, setHayActualizacion] = useState(false);
+  useEffect(() => vigilarActualizacion(() => setHayActualizacion(true)), []);
+  useEffect(() => {
+    if (hayActualizacion && !running) aplicarActualizacion();
+  }, [hayActualizacion, running]);
 
   const medidor = auditoria ? <BatteryAudit estado={bateria} /> : null;
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    windowSwipeToDismiss en false es lo importante de este tema.
+
+    En Wear OS el gesto de arrastrar desde el borde izquierdo cierra la
+    actividad, y en la pileta el reloj se roza contra el agua y contra el brazo
+    todo el tiempo. Cerrar la app a mitad de una serie obliga a reconfigurar
+    todo, que es la misma razon por la que el STOP pide mantener dos segundos.
+
+    Para salir queda el boton fisico de atras, que manda la app al fondo sin
+    perder la serie (ver MainActivity.onBackPressed).
+  -->
+  <style name="PiletaReloj" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+    <item name="android:windowFullscreen">true</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowSwipeToDismiss">false</item>
+    <item name="android:windowBackground">@android:color/black</item>
+  </style>
+</resources>

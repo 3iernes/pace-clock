@@ -7,8 +7,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 // para probar es http://<ip-local>:5173/ y no hay que acordarse del subdirectorio.
 const BASE_EN_PRODUCCION = '/pace-clock/';
 
+// `vite preview` reporta command === 'serve', igual que el dev server, pero
+// sirve lo que salio del build: si no lo tratamos como produccion, el HTML pide
+// los assets desde /pace-clock/ y el servidor los ofrece desde la raiz.
+const esPreview = process.argv.includes('preview');
+
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? BASE_EN_PRODUCCION : '/',
+  base: command === 'build' || esPreview ? BASE_EN_PRODUCCION : '/',
 
   // El telefono de la pileta es un Moto E5 Plus con Chrome 138: un target
   // conservador no cuesta nada y saca de la ecuacion cualquier sorpresa.

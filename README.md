@@ -64,6 +64,7 @@ El último intervalo usado queda guardado para la próxima vez.
 npm install
 npm run dev      # servidor local, tambien accesible desde la red
 npm test         # tests de la logica del cronometro
+npm run test:reloj  # compara la copia en Java de esa logica contra la de JS
 npm run build    # build de produccion + service worker
 ```
 
@@ -204,6 +205,179 @@ La orientación se fija **a la que tenga el teléfono en ese momento**, no a una
 fija, para no romper la versión vertical. Sirve además porque apoyado en el borde
 de la pileta el acelerómetro lo puede hacer rotar solo a mitad de una serie.
 
+## El reloj (Galaxy Watch4)
+
+`npm run apk:reloj` compila una **segunda app, nativa**, para Wear OS. No
+comparte código con la web: comparte el pipeline de compilación, los íconos y la
+matemática del cronómetro.
+
+### Por qué no alcanzaba con la envoltura
+
+La idea obvia era reusar `android/`: cambiar el manifest, dejar el mismo WebView
+apuntando a la misma URL. No se puede. **El Watch4 no tiene WebView.**
+
+```
+java.lang.UnsupportedOperationException
+  at android.webkit.WebViewFactory.getProvider(WebViewFactory.java:345)
+  at ar.pileta.MainActivity.onCreate(MainActivity.java:35)
+```
+
+Esa excepción la tira `getProvider()` cuando el sistema no declara la feature
+`android.software.webview`. No es un WebView viejo ni roto: no existe.
+`dumpsys webviewupdate` ni siquiera encuentra el servicio, o sea que la
+plataforma se compiló sin soporte. Es el problema opuesto al del Moto: allá el
+motor estaba y el paquete no arrancaba, acá el paquete arranca perfecto y falta
+el motor.
+
+Como consecuencia, cualquier navegador que se sideloadee en el reloj falla
+igual: todos usan el mismo WebView del sistema. La única salida era dibujar.
+
+### Qué cambia respecto de la web
+
+| | Teléfono | Reloj |
+| --- | --- | --- |
+| Pantalla | 720×360 rectangular | 396×396 **redonda** |
+| Render | HTML y CSS | `Canvas`, a mano |
+| STOP | botón, mantener 2 s | **toda la pantalla**, mantener 2 s |
+| Progreso del STOP | el botón se llena | un aro por el borde |
+| Preparación | stepper de a 1 s | un botón que cicla sin / 2 / 3 / 5 s |
+| Aviso de salida | color | color **y vibración** |
+| Pantalla prendida | Wake Lock API | `FLAG_KEEP_SCREEN_ON` |
+| Offline | service worker | no hay nada que bajar |
+
+**En una pantalla redonda el ancho útil depende del alto.** Cada caja se
+dimensiona contra la cuerda del círculo a su altura y cada círculo contra el
+radio (`Estilo.medioAncho`). Sin eso los bordes quedan cortados por el bisel,
+que es exactamente lo que pasaría reusando el layout vertical del teléfono.
+
+**El STOP es la pantalla entera.** En 396 píxeles redondos no sobra lugar para
+un botón que además haya que embocar con el dedo mojado, así que se mantiene
+apretado en cualquier lado y el progreso va por el borde: es el único lugar de
+una pantalla redonda donde entra una barra larga.
+
+**Vibra tres segundos antes de cada cero**, un pulso solo y largo. Es la única
+señal que le gana al color: se siente abajo del agua y con la cara en el fondo,
+que es justo donde el flash verde no sirve para nada. Para que el aviso llegue
+con la pantalla apagada, el loop sigue corriendo cuando la app deja de estar a
+la vista, sólo que más lento y sin dibujar nada. No es una garantía: si el
+sistema mata el proceso, el aviso se corta hasta volver a abrir la app.
+
+Con una preparación de 2 o 3 segundos el aviso caería arriba del START, así que
+ahí no vibra: sólo con preparación de 5.
+
+**No pide permiso de INTERNET.** La app es todo el paquete. No hay service
+worker que cebar antes de ir a la pileta, que era la parte frágil de la versión
+web sin WiFi.
+
+**El gesto de deslizar para cerrar está desactivado**
+(`windowSwipeToDismiss` en `false`). En la pileta el reloj se roza contra el
+agua y contra el brazo todo el tiempo, y cerrar la app a mitad de una serie
+obliga a reconfigurar todo. Para salir queda el botón físico de atrás, que la
+manda al fondo sin perder la serie.
+
+**Se reengancha a la serie en curso.** El timestamp de arranque se guarda en
+`SharedPreferences`, así que si el sistema mata la app —en el reloj pasa seguido,
+se apaga la pantalla y se baja la muñeca— al volver muestra la repetición
+correcta en vez de la pantalla de configuración. Una serie de más de tres horas
+se considera olvidada y no se retoma.
+
+### El costo: la matemática existe dos veces
+
+`src/tick.js` está portado línea por línea a `Tick.java`. Es la única
+duplicación del proyecto y es la peligrosa, porque es el único lugar donde puede
+haber un bug de tiempo.
+
+```bash
+npm run test:reloj
+```
+
+Genera decenas de miles de casos con la versión de JavaScript —toda la
+preparación, las fronteras de las primeras 200 repeticiones con cuatro
+intervalos distintos, y un barrido de una hora— y hace que la de Java los
+reproduzca uno por uno. Hoy son 41.647 casos idénticos. Si alguien toca una sola
+de las dos copias, esto falla.
+
+No cuelga de `npm test` porque necesita el JDK, y `npm test` corre en CI antes
+de publicar el sitio.
+
+### Instalarla
+
+El Watch4 no acepta APKs por el Play Store, así que va por ADB sobre WiFi, con
+el reloj y la computadora en la misma red. En el reloj: Ajustes → Acerca del
+reloj → Información de software → tocar "Versión de software" hasta que se
+active el modo desarrollador, y después Opciones de desarrollador → Depuración
+ADB y Depuración por Wi-Fi.
+
+```bash
+adb pair IP:PUERTO_DE_EMPAREJADO
+```
+
+```bash
+adb connect IP:PUERTO_DE_DEPURACION
+```
+
+Los dos puertos son distintos y los muestra la pantalla del reloj. El de
+emparejar es efímero y muere apenas se usa; el emparejado no hay que repetirlo,
+la conexión sí cada vez que el reloj se duerme o cambia de red.
+
+```bash
+adb -s IP:PUERTO install -r public/pileta-reloj.apk
+```
+
+Con `-s` porque casi siempre hay más de un dispositivo conectado y `adb` no
+adivina cuál.
+
+### Lo que el reloj no puede
+
+- **El aviso de color no se ve mientras se nada.** Todo el diseño de la app
+  —pantalla completa, ámbar, flash verde— existe para verse de reojo desde el
+  andarivel, y una pantalla de 1,2" en la muñeca no da nada de eso: se lee en la
+  pared y nada más. La vibración es lo único que sobrevive al agua, y por eso
+  terminó siendo la señal principal del reloj en vez de un extra.
+- **La pantalla se apaga al bajar la muñeca**, por más `FLAG_KEEP_SCREEN_ON` que
+  haya: ese gesto lo maneja el sistema. No importa demasiado, porque la cuenta
+  se recalcula contra el reloj del sistema y al levantar la muñeca ya muestra el
+  valor correcto.
+- **Con Water Lock activado la pantalla táctil no responde**, así que no se
+  puede ni parar la serie hasta desactivarlo.
+
+### Archivos
+
+| Archivo | Qué hace |
+| --- | --- |
+| `android/wear/java/.../Tick.java` | El port de `src/tick.js`. La única duplicación del proyecto. |
+| `android/wear/java/.../Formato.java` | El port de `src/format.js`. |
+| `android/wear/java/.../Estilo.java` | Los colores de `styles.css` y las dos cuentas de la pantalla redonda. |
+| `android/wear/java/.../VistaConfig.java` | Los steppers y el START, dibujados. |
+| `android/wear/java/.../VistaReloj.java` | La cuenta gigante, el color y el aro del STOP. |
+| `android/wear/java/.../MainActivity.java` | Alterna las dos pantallas y corre el loop. |
+| `android/wear/prueba/.../PruebaTick.java` | Compara contra los vectores de la web. No viaja en el APK. |
+| `android/prueba-tick.mjs` | Genera esos vectores y corre la comparación. |
+
+## Actualizar
+
+**El APK casi nunca hay que reinstalarlo.** Es una cáscara de 16 KB que carga la
+URL; todo el código de la app viene de la web. Sólo hay que recompilarlo si
+cambia algo de `android/`: el manifest, la Activity, el ícono o la URL.
+
+Para el resto, un `git push` alcanza: el sitio se deploya solo y **la app aplica
+la versión nueva sola**, sin tener que abrirla dos veces.
+
+Cómo funciona: el service worker se registra con `autoUpdate`, así que baja la
+versión nueva en segundo plano y se activa enseguida, pero la página que ya está
+cargada sigue corriendo con los archivos viejos. `src/actualizacion.js` escucha
+`controllerchange` —el momento exacto en que el service worker nuevo toma el
+control— y recarga ahí.
+
+Dos detalles que evitan que eso moleste:
+
+- **Nunca recarga en medio de una serie.** Si el cronómetro está corriendo, la
+  recarga espera al STOP.
+- **No recarga en la primera instalación.** Ahí también hay un `controllerchange`,
+  pero no es una actualización, así que se ignora comprobando si ya había un
+  controlador al arrancar. Sin esa guarda, cada instalación limpia se comería un
+  refresco al pedo.
+
 ## Estructura
 
 | Archivo | Qué hace |
@@ -215,6 +389,7 @@ de la pileta el acelerómetro lo puede hacer rotar solo a mitad de una serie.
 | `src/SetupScreen.jsx` | Los steppers y el START. |
 | `src/ClockScreen.jsx` | La cuenta gigante, el contador y el STOP. |
 | `src/styles.css` | Todo el diseño, incluidos los tres estados de color. |
+| `src/actualizacion.js` | Aplica una versión nueva sola, pero nunca en medio de una serie. |
 | `src/pantallaCompleta.js` | Pide pantalla completa y fija la orientación al arrancar. |
 | `src/format.js` | Segundos a `M:SS`. |
 | `src/usePersistentNumber.js` | Recuerda la configuración entre sesiones. |
