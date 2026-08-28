@@ -237,29 +237,38 @@ button:disabled {
   color: #fff;
 }
 
+/* Probado en la pileta: a 4vh (14px en el Moto acostado) habia que acercarse al
+   telefono para leer la repeticion. El alto sobraba, asi que va al doble. Las
+   cuentas: de 360px de alto, la cuenta gigante se lleva 48vh y el STOP 3rem;
+   quedan ~135px para estas dos filas y con 8vh y 7vh se usan 65. */
 .clock__rep {
   grid-area: rep;
   justify-self: start;
-  font-size: clamp(0.75rem, 4vh, 1.5rem);
+  font-size: clamp(1.1rem, 8vh, 2.75rem);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
 
 /* Mas apagado que el REP: es informacion de contexto, no algo que haya que leer
-   desde el agua. */
+   desde el agua. Pero 0.55 sobre el ambar del aviso lo dejaba casi lavado, y
+   agrandarlo no sirve de nada si el contraste no acompana. */
 .clock__transcurrido {
   grid-area: elapsed;
   justify-self: start;
-  font-size: clamp(0.75rem, 4vh, 1.5rem);
+  font-size: clamp(1rem, 7vh, 2.5rem);
   font-weight: 600;
-  opacity: 0.55;
+  opacity: 0.7;
   letter-spacing: 0.04em;
 }
 
+/* Mismo tamano que el REP y no el suyo propio: comparten la fila de arriba, uno
+   en cada punta, y con tamanos distintos la fila se veia desbalanceada. Que sea
+   dato fijo (se elige una vez y no cambia en toda la serie) lo dice la opacidad,
+   no el cuerpo. */
 .clock__interval {
   grid-area: pace;
   justify-self: end;
-  font-size: clamp(0.75rem, 4vh, 1.5rem);
+  font-size: clamp(1.1rem, 8vh, 2.75rem);
   font-weight: 600;
   opacity: 0.6;
   letter-spacing: 0.04em;
