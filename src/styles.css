@@ -219,6 +219,15 @@ button:disabled {
     "warn     warn   stop";
   align-items: center;
   column-gap: 1rem;
+  /* Un solo cuerpo para los tres datos de contexto (REP, transcurrido y pace):
+     comparten la fila de arriba, uno en cada punta, y con tamanos distintos se
+     ve desbalanceada. El `min()` es porque el techo lo pone el ancho y no el
+     alto: durante la preparacion, "PREPARATE" y "cada 10:00" van en la misma
+     fila y entre los dos mas el reloj del medio se comen 12 veces el cuerpo de
+     letra mas 118px fijos. De ahi sale 6.2vw, que es lo maximo que aguanta un
+     horizontal de 568px de ancho, el mas angosto que vale la pena sostener. Los
+     13vh mandan recien en pantallas mas anchas que altas de sobra. */
+  --dato: clamp(1.4rem, min(13vh, 6.2vw), 3.5rem);
   /* Corto, pero no instantaneo: se lee como un cambio de estado, no como un
      parpadeo. El color ocupa la pantalla entera porque con antiparras mojadas
      se ve un bloque de color de reojo, no un numero chico. */
@@ -237,14 +246,13 @@ button:disabled {
   color: #fff;
 }
 
-/* Probado en la pileta: a 4vh (14px en el Moto acostado) habia que acercarse al
-   telefono para leer la repeticion. El alto sobraba, asi que va al doble. Las
-   cuentas: de 360px de alto, la cuenta gigante se lleva 48vh y el STOP 3rem;
-   quedan ~135px para estas dos filas y con 8vh y 7vh se usan 65. */
+/* Tercera pasada en la pileta: 4vh, despues 8vh, y todavia habia que acercarse.
+   Ahora va al maximo que entra, que en el Moto acostado son 45px contra los 14
+   del principio. */
 .clock__rep {
   grid-area: rep;
   justify-self: start;
-  font-size: clamp(1.1rem, 8vh, 2.75rem);
+  font-size: var(--dato);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
@@ -255,20 +263,18 @@ button:disabled {
 .clock__transcurrido {
   grid-area: elapsed;
   justify-self: start;
-  font-size: clamp(1rem, 7vh, 2.5rem);
+  font-size: calc(var(--dato) * 0.9);
   font-weight: 600;
   opacity: 0.7;
   letter-spacing: 0.04em;
 }
 
-/* Mismo tamano que el REP y no el suyo propio: comparten la fila de arriba, uno
-   en cada punta, y con tamanos distintos la fila se veia desbalanceada. Que sea
-   dato fijo (se elige una vez y no cambia en toda la serie) lo dice la opacidad,
-   no el cuerpo. */
+/* Que sea un dato fijo (se elige una vez y no cambia en toda la serie) lo dice
+   la opacidad, no el cuerpo: el cuerpo lo comparte con el REP. */
 .clock__interval {
   grid-area: pace;
   justify-self: end;
-  font-size: clamp(1.1rem, 8vh, 2.75rem);
+  font-size: var(--dato);
   font-weight: 600;
   opacity: 0.6;
   letter-spacing: 0.04em;
